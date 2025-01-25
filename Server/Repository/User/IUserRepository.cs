@@ -10,6 +10,8 @@ public interface IUserRepository
 
     public Task<UserRecord?> GetByIdAsync(Guid id);
 
+    public Task<decimal> GetBalanceAsync(string userId);
+
     public Task<Guid> AddAsync(UserRecord data);
 
     public void Update(UserRecord data);

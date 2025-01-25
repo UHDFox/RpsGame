@@ -1,5 +1,6 @@
 using Domain.Entities;
 using Domain.Infrastructure;
+using Domain.Infrastructure.Enums;
 using Microsoft.EntityFrameworkCore;
 
 namespace Domain;
@@ -17,7 +18,7 @@ public class GameServerDbContext : DbContext
     public DbSet<GameTransactionsRecord> GameTransactions  { get; set; }
     
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
-    {
+    {        
         configurationBuilder
             .Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetConverter>();
@@ -26,6 +27,9 @@ public class GameServerDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.HasPostgresEnum<MatchStatus>();
+
         modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
     }
 }

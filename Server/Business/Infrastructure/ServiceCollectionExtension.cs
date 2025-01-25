@@ -9,7 +9,7 @@ public static class ServiceCollectionExtension
 {
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
-        services.AddTransient<IGameService, GameService>();
+        services.AddTransient<IGameManager, GameManager>();
 
         services.AddTransient<IUserService, UserService>();
 

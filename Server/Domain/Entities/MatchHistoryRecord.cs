@@ -1,3 +1,5 @@
+using Domain.Infrastructure.Enums;
+
 namespace Domain.Entities;
 
 public sealed class MatchHistoryRecord
@@ -8,9 +10,11 @@ public sealed class MatchHistoryRecord
     
     public Guid? OpponentId { get; set; }
     
-    public Guid? WinnerId { get; set; }
+    public string? Winner { get; set; }
     
     public decimal Bet { get; set; }
+    
+    public MatchStatus Status { get; set; }
     
     public DateTimeOffset StartTime { get; set; }
     
@@ -18,10 +22,13 @@ public sealed class MatchHistoryRecord
     
     public UserRecord? Opponent { get; set; }
     
-    public MatchHistoryRecord(Guid hostId, decimal bet)
+    public ICollection<string> PlayerMoves { get; set; } = new List<string>();
+    
+    public MatchHistoryRecord(Guid hostId, decimal bet, string? winner)
     {
         HostId = hostId;
         Bet = bet;
         StartTime = DateTimeOffset.UtcNow;
+        Winner = winner;
     }
 }

@@ -5,6 +5,8 @@ namespace Repository.MatchHistory;
 public interface IMatchHistoryRepository
 {
     public Task<IReadOnlyCollection<MatchHistoryRecord>> GetAllAsync();
+    
+    public Task<IReadOnlyCollection<MatchHistoryRecord>> GetAllMatchesForUserAsync(string id);
 
     public Task<MatchHistoryRecord?> GetByIdAsync(Guid id);
 

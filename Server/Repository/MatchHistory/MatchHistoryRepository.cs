@@ -18,6 +18,13 @@ public class MatchHistoryRepository : IMatchHistoryRepository
         return await _context.MatchHistories.ToListAsync();
     }
 
+    public async Task<IReadOnlyCollection<MatchHistoryRecord>> GetAllMatchesForUserAsync(string id)
+    {
+        return await _context.MatchHistories
+            .Where(x => x.OpponentId.ToString() == id || x.HostId.ToString() == id)
+            .ToListAsync();
+    }
+
     public async Task<MatchHistoryRecord?> GetByIdAsync(Guid id)
     {
         return await _context.MatchHistories
