@@ -1,0 +1,57 @@
+syntax = "proto3";
+
+package game;
+
+message CreateMatchRequest {
+  string host_id = 1;
+  double bet = 2; 
+}
+
+message CreateMatchResponse {
+  string match_id = 1; 
+}
+
+message PlayGameRequest {
+  string match_id = 1;  
+  string player_move = 2; // Ход игрока: "K", "H" или "Б" 
+}
+
+message GameResult {
+  string winner = 1;
+  string match_id = 2; 
+}
+
+message GetBalanceRequest {
+  string user_id = 1;
+}
+
+message GetBalanceResponse {
+  double balance = 1; 
+}
+
+message GetMatchHistoryRequest {
+  string user_id = 1; 
+}
+
+message GetMatchHistoryResponse {
+  repeated MatchHistory match_history = 1;
+}
+
+message MatchHistory {
+  string match_id = 1; 
+  double bet = 2;      
+  string winner = 3;   
+  string start_time = 4; 
+}
+
+
+service GameService {
+  
+  rpc CreateMatch (CreateMatchRequest) returns (CreateMatchResponse);
+  
+  rpc PlayGame (PlayGameRequest) returns (GameResult);
+  
+  rpc GetBalance (GetBalanceRequest) returns (GetBalanceResponse);
+  
+  rpc GetMatchHistory (GetMatchHistoryRequest) returns (GetMatchHistoryResponse);
+}
