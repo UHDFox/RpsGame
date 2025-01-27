@@ -25,6 +25,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <Protobuf Include="..\..\Proto\rpsGame.proto" GrpcServices="Server" />
+    </ItemGroup>
+    
+    <ItemGroup>
       <ProjectReference Include="..\Business\Business.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>

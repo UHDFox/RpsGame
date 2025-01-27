@@ -1,5 +1,5 @@
 using System.Reflection;
-using Business.Game;
+using Business.GameManager;
 using Business.User;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,7 +9,7 @@ public static class ServiceCollectionExtension
 {
     public static IServiceCollection AddBusinessServices(this IServiceCollection services)
     {
-        services.AddTransient<IGameService, GameService>();
+        services.AddTransient<IGameManager, GameManager.GameManager>();
 
         services.AddTransient<IUserService, UserService>();
 

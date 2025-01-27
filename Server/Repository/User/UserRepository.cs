@@ -30,6 +30,12 @@ public sealed class UserRepository : IUserRepository
             .FirstOrDefaultAsync(e => e.Id == id);
     }
 
+    public async Task<decimal> GetBalanceAsync(string userId)
+    {
+        return (await _context.Users.FirstOrDefaultAsync(x => x.Id.ToString() == userId) 
+                ?? throw new Exception("User not found")).Balance;
+    }
+
     public async Task<Guid> AddAsync(UserRecord data)
     {
         var result = await _context.Users.AddAsync(data);

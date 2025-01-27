@@ -1,4 +1,3 @@
-using Business.Game;
 using Business.Infrastructure;
 using Repository.Infrastructure;
 using Web.Infrastructure;
@@ -25,5 +24,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGrpcService<GameService>();
+app.MapGrpcService<Web.Service.GameService>();
 app.Run();

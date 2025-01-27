@@ -49,5 +49,18 @@ CREATE INDEX "IX_Users_Name" ON "Users" ("Name");
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20250125105908_Initial', '9.0.1');
 
+ALTER TABLE "MatchHistories" DROP COLUMN "WinnerId";
+
+CREATE TYPE match_status AS ENUM ('finished', 'postponed', 'pending');
+
+ALTER TABLE "MatchHistories" ADD "PlayerMoves" text[] NOT NULL DEFAULT ARRAY[]::text[];
+
+ALTER TABLE "MatchHistories" ADD "Status" integer NOT NULL DEFAULT 0;
+
+ALTER TABLE "MatchHistories" ADD "Winner" text;
+
+INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+VALUES ('20250125153531_AddMatchStatus', '9.0.1');
+
 COMMIT;
 

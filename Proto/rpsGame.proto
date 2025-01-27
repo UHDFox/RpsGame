@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package game;
+
+// Request to create a new match
+message CreateMatchRequest {
+    string host_id = 1;  // The host player's email (ID could be used as well)
+    double bet = 2;  // The bet amount for the match
+    string host_move = 3;
+}
+
+// Response for match creation
+message CreateMatchResponse {
+    string match_id = 1;  // The ID of the created match
+}
+
+// Request to join a match as an opponent
+message JoinMatchRequest {
+    string match_id = 1;  // The match ID to join
+    string opponent_id = 2;  // The opponent player's email (ID could be used as well)
+    string player_move = 3;
+}
+
+// Response for joining a match
+message JoinMatchResponse {
+    string match_id = 1;  // The match ID
+    string status = 2;  // The status of the match ("waiting for opponent", "ongoing")
+    string winner = 3;
+}
+
+
+// Request to get balance
+message GetBalanceRequest {
+    string user_id = 1;
+}
+
+// Response to get balance
+message GetBalanceResponse {
+    double balance = 1;  // User's balance
+}
+
+// Request to get match history
+message GetMatchHistoryRequest {
+    string user_id = 1;  // User's ID to fetch the match history
+}
+
+// Response for match history
+message GetMatchHistoryResponse {
+    repeated MatchHistory match_history = 1;  // List of user's match history
+}
+
+// Match history details
+message MatchHistory {
+    string match_id = 1;  // Match ID
+    double bet = 2;  // Bet amount
+    string winner = 3;  // Winner of the match ("Tie" if it's a draw)
+    string start_time = 4;  // Start time of the match
+}
+
+// Request to transfer money between two players
+message TransferMoneyRequest {
+    string sender_id = 1;  // Sender's user ID
+    string receiver_id = 2;  // Receiver's user ID
+    double amount = 3;  // Amount to transfer
+}
+
+// Response for money transfer
+message TransferMoneyResponse {
+    bool success = 1;  // True if the transfer is successful
+}
+
+// Service definition
+service GameService {
+    // Create a new match
+    rpc CreateMatch(CreateMatchRequest) returns (CreateMatchResponse);
+
+    // Join an existing match
+    rpc JoinMatch(JoinMatchRequest) returns (JoinMatchResponse);
+
+    // Get user's balance
+    rpc GetBalance(GetBalanceRequest) returns (GetBalanceResponse);
+
+    // Get user's match history
+    rpc GetMatchHistory(GetMatchHistoryRequest) returns (GetMatchHistoryResponse);
+
+    // Transfer money between two players
+    rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse);
+}
