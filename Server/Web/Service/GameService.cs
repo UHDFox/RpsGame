@@ -2,7 +2,6 @@ using Game;
 using Grpc.Core;
 using Business.GameManager;
 using Business.Infrastructure.Exceptions;
-using Domain.Infrastructure.Enums;
 
 namespace Web.Service
 {

@@ -14,8 +14,7 @@ public static class ServiceCollectionExtension
         services.AddTransient<IUserService, UserService>();
 
         services.AddAutoMapper(ApplicationAssemblyReference.Assembly);
-
-
+        
         return services;
     }
 
