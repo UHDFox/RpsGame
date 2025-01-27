@@ -52,6 +52,28 @@ namespace Web.Service
                throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
            }
        }
+       
+       public override async Task<GetMatchesWithBetResponse> GetMatchesWithBet(GetMatchesWithBetRequest request, ServerCallContext context)
+       {
+           try
+           {
+               var matchStatusList = await _gameManager.GetMatchesWithBetAndWaitingPlayerAsync();
+               
+               var response = new GetMatchesWithBetResponse();
+               response.MatchStatusInfo.AddRange(matchStatusList.Select(match => new MatchStatusInfo
+               {
+                   MatchId = match.MatchId,
+                   Bet = (double)match.Bet,
+                   IsWaitingForPlayer = match.IsWaitingForPlayer
+               }));
+        
+               return response;
+           }
+           catch (Exception ex)
+           {
+               throw new RpcException(new Status(StatusCode.Internal, ex.Message));
+           }
+       }
         public override async Task<CreateMatchResponse> CreateMatch(CreateMatchRequest request, ServerCallContext context)
         {
             try

@@ -7,6 +7,7 @@ using Repository.GameTransactions;
 using Repository.MatchHistory;
 using Repository.User;
 
+
 namespace Business.GameManager;
 
 public sealed class GameManager : IGameManager
@@ -258,6 +259,21 @@ public sealed class GameManager : IGameManager
             Winner = match.Winner ?? "Tie"
         };
     }
+    
+    public async Task<IEnumerable<Game.MatchStatusInfo>> GetMatchesWithBetAndWaitingPlayerAsync()
+    {
+        var matches = await _matchHistoryRepository.GetAllAsync();
+        
+        // Создадим список с информацией о матчах
+        var matchStatusList = matches.Select(match => new Game.MatchStatusInfo
+        {
+            MatchId = match.Id.ToString(),
+            Bet = (double)match.Bet,
+            IsWaitingForPlayer = match.OpponentId == Guid.Empty // Если OpponentId пуст, значит матч ожидает игрока
+        });
+    
+        return matchStatusList;
+    }
 
      public async Task<IEnumerable<MatchHistory>> GetMatchHistoryAsync(string userId)
      {
@@ -272,14 +288,14 @@ public sealed class GameManager : IGameManager
          });
      }
 
-     private bool IsValidMove(string move) => new[] { "Камень", "Ножницы", "Бумага" }.Contains(move);
+     private bool IsValidMove(string move) => new[] { "К", "Н", "Б" }.Contains(move);
 
      private string DetermineWinner(string move1, string move2)
      {
          if (move1 == move2)
              return "Draw";
 
-         if ((move1 == "Камень" && move2 == "Ножницы") || (move1 == "Ножницы" && move2 == "Бумага") || (move1 == "Бумага" && move2 == "Камень"))
+         if ((move1 == "К" && move2 == "Н") || (move1 == "Н" && move2 == "Б") || (move1 == "Б" && move2 == "К"))
              return "Player 1";
 
          return "Player 2";
