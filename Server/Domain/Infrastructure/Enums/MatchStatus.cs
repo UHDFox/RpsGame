@@ -4,5 +4,5 @@ public enum MatchStatus
 {
     Finished,
     Postponed,
-    Pending
+    GameStarted
 }

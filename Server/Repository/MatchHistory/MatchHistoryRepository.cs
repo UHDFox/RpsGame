@@ -41,8 +41,15 @@ public class MatchHistoryRepository : IMatchHistoryRepository
 
     public void Update(MatchHistoryRecord data)
     {
-        ;
-        _context.MatchHistories.Update(data);
+        var existingEntity = _context.MatchHistories
+            .FirstOrDefault(e => e.Id == data.Id); // Находим сущность с тем же Id, но без отслеживания
+
+        if (existingEntity != null)
+        {
+            // Обновляем только те поля, которые изменились, чтобы избежать ошибок
+            _context.Entry(existingEntity).CurrentValues.SetValues(data);
+            _context.Entry(existingEntity).State = EntityState.Modified;
+        }
     }
 
     public async Task<bool> DeleteAsync(Guid id)

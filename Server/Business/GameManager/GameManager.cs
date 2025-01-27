@@ -7,7 +7,7 @@ using Repository.GameTransactions;
 using Repository.MatchHistory;
 using Repository.User;
 
-namespace Business.Game;
+namespace Business.GameManager;
 
 public sealed class GameManager : IGameManager
 {
@@ -27,28 +27,26 @@ public sealed class GameManager : IGameManager
 
     public async Task<Guid> CreateMatchAsync(Guid hostId, decimal betAmount, string hostMove)
     {
-        var host = await _userRepository.GetByIdAsync(hostId);
-        if (host == null)
-        {
-            throw new Exception("Host user not found.");
-        }
+        var host = await _userRepository.GetByIdAsync(hostId) 
+                   ?? throw new UserNotFoundException("Host user not found.");
 
-        // Validate the host's move
-        if (!IsValidMove(hostMove))
-        {
-            throw new InvalidMoveException("Invalid move.");
-        }
+        if (betAmount <= 0)
+            throw new InvalidBetException("Bet amount must be greater than zero.");
 
-        // Create the match record and store the host's move
-        var match = new MatchHistoryRecord(host.Id, betAmount, hostMove)
+        var match = new MatchHistoryRecord(hostId, betAmount, null)
         {
-            Status = MatchStatus.Postponed, 
-            PlayerMoves = new[] { hostMove }
+            HostId = hostId,
+            Bet = betAmount,
+            PlayerMoves = new List<string>(),
+            Status = MatchStatus.Postponed,
+            StartTime = DateTime.UtcNow
         };
-        
-        await _matchHistoryRepository.AddAsync(match);
 
-        // Return the created match ID
+        await _matchHistoryRepository.AddAsync(match);
+        await _matchHistoryRepository.SaveChangesAsync();
+        
+        await ProcessPlayerMoveAsync(match.Id.ToString(), hostMove, hostId.ToString() );
+        
         return match.Id;
     }
 
@@ -126,72 +124,130 @@ public sealed class GameManager : IGameManager
         return await _userRepository.GetBalanceAsync(userId);
     }
 
-    
+
     public async Task<JoinMatchResponse> JoinMatchAsync(string matchId, string opponentId)
+{
+    try
+    {
+        var match = await _matchHistoryRepository.GetByIdAsync(Guid.Parse(matchId))
+                    ?? throw new Exception("Match not found.");
+        
+        if (match.Status == MatchStatus.Finished)
+        {
+            throw new Exception("The match has already finished.");
+        }
+        
+        if (match.Status == MatchStatus.Postponed)
+        {
+            var opponent = await _userRepository.GetByIdAsync(Guid.Parse(opponentId))
+                           ?? throw new Exception("Opponent not found.");
+            
+            if (match.OpponentId != Guid.Empty)
+            {
+                if(opponentId != match.HostId.ToString())
+                {
+                    match.OpponentId = Guid.Parse(opponentId);
+                    match.Status = MatchStatus.GameStarted;  // Game started
+                }
+                
+                
+                _matchHistoryRepository.Update(match);
+                await _userRepository.SaveChangesAsync();
+                
+                return new JoinMatchResponse()
+                {
+                    MatchId = match.Id.ToString(),
+                    Status = MatchStatus.GameStarted.ToString(),
+                };
+            }
+            else
+            {
+                return new JoinMatchResponse()
+                {
+                    MatchId = match.Id.ToString(),
+                    Status = MatchStatus.Postponed.ToString(),
+                };
+            }
+        }
+        
+        if (match.Status == MatchStatus.GameStarted)
+        {
+            var opponent = await _userRepository.GetByIdAsync(Guid.Parse(opponentId))
+                           ?? throw new Exception("Opponent not found.");
+            
+            if (match.HostId == Guid.Parse(opponentId) || match.OpponentId == Guid.Parse(opponentId))
+            {
+                return new JoinMatchResponse()
+                {
+                    MatchId = match.Id.ToString(),
+                    Status = MatchStatus.GameStarted.ToString(),
+                };
+            }
+            else
+            {
+                throw new Exception("Player is not part of this match.");
+            }
+        }
+        
+        return new JoinMatchResponse()
+        {
+            MatchId = matchId, 
+            Status = "Error: Unexpected error occurred" 
+        };
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error while joining the match: {ex.Message}");
+        
+        return new JoinMatchResponse()
+        {
+            MatchId = matchId,
+            Status = $"Error: {ex.Message}"
+        };
+    }
+}
+    
+
+
+    public async Task<JoinMatchResponse> ProcessPlayerMoveAsync(string matchId, string playerMove, string playerId)
     {
         var match = await _matchHistoryRepository.GetByIdAsync(Guid.Parse(matchId))
                     ?? throw new Exception("Match not found.");
 
-        // Проверка на статус матча
-        if (match.Status != MatchStatus.Postponed)
-            throw new Exception("This match is already ongoing.");
-
-        var opponent = await _userRepository.GetByIdAsync(Guid.Parse(opponentId))
-                       ?? throw new Exception("Opponent not found.");
-        
-        match.Opponent = opponent;
-        match.Status = MatchStatus.Pending;  // Обновляем статус матча 
-
-        _matchHistoryRepository.Update(match);
-        await _userRepository.SaveChangesAsync();
-
-        return new JoinMatchResponse
-        {
-            MatchId = matchId,
-            Status = "Ongoing"
-        };
-    }
-    
-    public async Task<JoinMatchResponse> ProcessPlayerMoveAsync(string matchId, string playerMove, string opponentId)
-    {
-        var match = await _matchHistoryRepository.GetByIdAsync(Guid.Parse(matchId))
-                    ?? throw new Exception("Match not found while processing player move");
-
-        if (match == null)
-            throw new Exception("Match not found");
-
         if (!IsValidMove(playerMove))
-            throw new InvalidMoveException("Invalid move");
-
-        if (match.PlayerMoves.Count == 0 || match.PlayerMoves.Count == 1)
+            throw new InvalidMoveException("Invalid move.");
+        
+        if (match.HostId == Guid.Parse(playerId))
         {
-            match.PlayerMoves.Add(playerMove);
+            match.PlayerMoves.Add(playerMove); // Ход хоста
+        }
+        else if (match.OpponentId == Guid.Parse(playerId))
+        {
+            match.PlayerMoves.Add(playerMove); // Ход оппонента
+        }
+        else
+        {
+            throw new Exception("Player is not part of this match.");
         }
 
+        // Если оба хода сделаны, определяем победителя
         if (match.PlayerMoves.Count == 2)
         {
-            var winner = DetermineWinner(match.PlayerMoves.First(), match.PlayerMoves.Last());
-            if (winner == "Player 1")
-            {
-                winner = match.HostId.ToString();
-            }
-            else
-            {
-                //winner = 
-            }
-            match.Winner = winner;
+            var winner = DetermineWinner(match.PlayerMoves.ElementAt(0), match.PlayerMoves.ElementAt(1));
+            match.Winner = winner == "Player 1" ? match.HostId.ToString() : match.OpponentId.ToString();
             match.Status = MatchStatus.Finished;
-            match.OpponentId = Guid.Parse(opponentId);
-
-            _matchHistoryRepository.Update(match);
+            
             await ProcessBetAsync(match);
         }
+        _matchHistoryRepository.Update(match);
 
+        await _matchHistoryRepository.SaveChangesAsync();
+        
         return new JoinMatchResponse()
         {
-            Winner = match.Winner,
             MatchId = matchId,
-            Status = MatchStatus.Finished.ToString(),
+            Status = match.Status.ToString(),
+            Winner = match.Winner ?? "Tie"
         };
     }
 
@@ -227,20 +283,23 @@ public sealed class GameManager : IGameManager
          if (match.Winner == null)
          {
              throw new UserNotFoundException("Winner not determined");
-         }
 
+         }
+         
          var winner = await _userRepository.GetByIdAsync(Guid.Parse(match.Winner)) 
-             ?? throw new UserNotFoundException($"Couldn't find user with email{match.Winner}");
+                      ?? throw new UserNotFoundException($"Couldn't find user with email{match.Winner}");
+
+         var loserId = match.HostId.ToString() == match.Winner ? match.OpponentId : match.HostId;
          
-         var loser = match.HostId == winner.Id ? winner : match.Host
-             ?? throw new UserNotFoundException($"Couldn't find the player who lost");
-         
+         var loser = await _userRepository.GetByIdAsync(Guid.Parse(loserId.ToString() 
+                                            ?? throw new UserNotFoundException($"Couldn't find the player by id while determining winner")));
+     
          decimal betAmount = match.Bet;
-         
+     
          winner.Balance += betAmount;
          loser.Balance -= betAmount;
-         
-         await _userRepository.SaveChangesAsync();
+     
+         await _userRepository.SaveChangesAsync();  
      }
     
 }

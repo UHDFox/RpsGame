@@ -1,8 +1,7 @@
 using Business.Models;
-using Domain.Entities;
 using Game;
 
-namespace Business.Game;
+namespace Business.GameManager;
 
 public interface IGameManager
 {

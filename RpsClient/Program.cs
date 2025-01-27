@@ -1,7 +1,5 @@
 ﻿using Game;
 using Grpc.Net.Client;
-using System;
-using System.Threading.Tasks;
 using Grpc.Core;
 
 namespace RpsClient
@@ -49,9 +47,7 @@ namespace RpsClient
                         Console.WriteLine("Invalid option. Please try again.");
                         break;
                 }
-
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey(); // Wait for user input to continue
+                
             }
         }
 
@@ -85,21 +81,23 @@ namespace RpsClient
             Console.WriteLine("Enter match ID: ");
             var matchId = Console.ReadLine();
 
-            Console.WriteLine("Enter your move: ('Камень', 'Ножницы', 'Бумага')");
+            Console.WriteLine("Enter your move (Rock, Paper, Scissors): ");
             var playerMove = Console.ReadLine();
 
             var playGameRequest = new JoinMatchRequest()
             {
                 MatchId = matchId,
-                OpponentId = loggedInUserId, // Use logged-in user ID
+                OpponentId = loggedInUserId,
                 PlayerMove = playerMove
             };
 
-           try
+            try
             {
-                var response = client.JoinMatch(playGameRequest);
-                Console.WriteLine($"Match ID: {response.MatchId}");
-                Console.WriteLine($"Winner: {response.Winner}");
+                var gameResult = await client.JoinMatchAsync(playGameRequest);
+
+                Console.WriteLine($"Match ID: {gameResult.MatchId}\nStatus: {gameResult.Status}");
+                if (!string.IsNullOrEmpty(gameResult.Winner))
+                    Console.WriteLine($"Winner: {gameResult.Winner}");
             }
             catch (RpcException ex)
             {
@@ -114,7 +112,7 @@ namespace RpsClient
 
             Console.WriteLine("Enter host's move ('Камень', 'Ножницы', 'Бумага'):");
             var hostMove = Console.ReadLine();
-
+            
             var createMatchRequest = new CreateMatchRequest
             {
                 HostId = loggedInUserId, // Use logged-in user ID
@@ -132,7 +130,7 @@ namespace RpsClient
                 Console.WriteLine($"Error: {ex.Status.Detail}");
             }
         }
-
+        
         private static async Task GetBalance(GameService.GameServiceClient client)
         {
             var getBalanceRequest = new GetBalanceRequest
