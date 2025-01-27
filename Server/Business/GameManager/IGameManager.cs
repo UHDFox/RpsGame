@@ -16,4 +16,6 @@ public interface IGameManager
     Task<JoinMatchResponse> ProcessPlayerMoveAsync(string matchId, string playerMove, string opponentId);
     
     Task<JoinMatchResponse> JoinMatchAsync(string matchId, string opponentId);
+    
+    Task<int> CreateMatch(MatchHistoryModel request);
 }

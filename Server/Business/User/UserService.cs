@@ -1,4 +1,6 @@
 using AutoMapper;
+using Business.Infrastructure.Exceptions;
+using Business.Models;
 using Domain.Entities;
 using Repository.User;
 
@@ -18,6 +20,30 @@ internal sealed class UserService : IUserService
     {
         var user = await _repository.GetByIdAsync(id) ?? throw new Exception();
         return _mapper.Map<UserModel>(user);
+    }
+
+    public async Task<TransferMoneyModel> TransferMoneyAsync(TransferMoneyModel request)
+    {
+        var sender = await _repository.GetByIdAsync(Guid.Parse(request.SenderId))
+                     ?? throw new UserNotFoundException("Couldn't find user with such id");
+        
+        var receiver = await _repository.GetByIdAsync(Guid.Parse(request.ReceiverId))
+                    ?? throw new UserNotFoundException("Couldn't find user with such id");
+        
+       receiver.Balance += (decimal)request.Amount;
+       sender.Balance -= (decimal)request.Amount;
+       
+       _repository.Update(sender);
+       _repository.Update(receiver);
+
+       await _repository.SaveChangesAsync();
+
+       return new TransferMoneyModel()
+       {
+           SenderId = request.SenderId,
+           ReceiverId = request.ReceiverId,
+           Amount = request.Amount
+       };
     }
 
     public async Task<IReadOnlyCollection<UserModel>> GetAllAsync(int offset, int limit)

@@ -206,7 +206,15 @@ public sealed class GameManager : IGameManager
         };
     }
 }
-    
+
+    public async Task<int> CreateMatch(MatchHistoryModel request)
+    {
+        var record = new MatchHistoryRecord(request.HostId, request.Bet, null);
+        
+        await _matchHistoryRepository.AddAsync(record);
+        
+        return await _matchHistoryRepository.SaveChangesAsync(); 
+    }
 
 
     public async Task<JoinMatchResponse> ProcessPlayerMoveAsync(string matchId, string playerMove, string playerId)
