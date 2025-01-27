@@ -18,4 +18,6 @@ public interface IGameManager
     Task<JoinMatchResponse> JoinMatchAsync(string matchId, string opponentId);
     
     Task<int> CreateMatch(MatchHistoryModel request);
+    
+    Task<IEnumerable<Game.MatchStatusInfo>> GetMatchesWithBetAndWaitingPlayerAsync();
 }

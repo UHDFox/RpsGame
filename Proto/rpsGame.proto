@@ -69,6 +69,18 @@ message TransferMoneyResponse {
     bool success = 1;  // True if the transfer is successful
 }
 
+message MatchStatusInfo {
+    string MatchId = 1;
+    double Bet = 2;
+    bool IsWaitingForPlayer = 3;
+}
+
+message GetMatchesWithBetRequest {}
+
+message GetMatchesWithBetResponse {
+    repeated MatchStatusInfo MatchStatusInfo = 1;
+}
+
 // Service definition
 service GameService {
     // Create a new match
@@ -85,4 +97,6 @@ service GameService {
 
     // Transfer money between two players
     rpc TransferMoney(TransferMoneyRequest) returns (TransferMoneyResponse);
+
+    rpc GetMatchesWithBet(GetMatchesWithBetRequest) returns (GetMatchesWithBetResponse);
 }
