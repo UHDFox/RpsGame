@@ -141,7 +141,7 @@ public sealed class GameManager : IGameManager
         if (match.Status == MatchStatus.Postponed)
         {
             var opponent = await _userRepository.GetByIdAsync(Guid.Parse(opponentId))
-                           ?? throw new Exception("Opponent not found.");
+                           ?? throw new Exception($"Opponent with id {opponentId} not found.");
             
             if (match.OpponentId != Guid.Empty)
             {
@@ -224,7 +224,7 @@ public sealed class GameManager : IGameManager
                     ?? throw new Exception("Match not found.");
 
         if (!IsValidMove(playerMove))
-            throw new InvalidMoveException("Invalid move.");
+            throw new InvalidMoveException($"Invalid player move: {playerMove}");
         
         if (match.HostId == Guid.Parse(playerId))
         {

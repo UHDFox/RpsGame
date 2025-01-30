@@ -7,6 +7,7 @@ namespace RpsClient
     class Program
     {
         private static string _loggedInUserId = "";
+        private static string[] _userMoves = { "К", "Н", "Б" };
 
         static async Task Main(string[] args)
         {
@@ -79,15 +80,16 @@ namespace RpsClient
                 {
                     Console.Write("Please enter your User ID to log in: ");
                     var userId = Console.ReadLine();
-
-                    if (!string.IsNullOrEmpty(userId))
+                    
+                    if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out Guid parsedUserId))
                     {
-                        _loggedInUserId = userId; // Save the logged-in user's ID
+                        _loggedInUserId = parsedUserId.ToString(); // Save the logged-in user's ID
                         Console.WriteLine($"Successfully logged in as User ID: {_loggedInUserId}\n");
                         break;
                     }
                     else
                     {
+                        Console.Clear();
                         Console.WriteLine("User ID cannot be empty. Please try again.");
                     }
                 }
@@ -144,16 +146,14 @@ namespace RpsClient
 
         private static async Task CreateMatch(GameService.GameServiceClient client)
         {
-            Console.Write("Enter bet amount: ");
-            var betAmount = decimal.Parse(Console.ReadLine());
-
-            Console.Write("Enter host's move ('Rock', 'Scissors', 'Paper'): ");
-            var hostMove = Console.ReadLine();
-
+            var bet = ReadBet();
+            
+            var hostMove = ReadHostMove();
+            
             var createMatchRequest = new CreateMatchRequest
             {
                 HostId = _loggedInUserId, // Use logged-in user ID
-                Bet = (double)betAmount,
+                Bet = bet,
                 HostMove = hostMove
             };
 
@@ -172,7 +172,50 @@ namespace RpsClient
             Console.WriteLine("\nPress any key to continue...");
             Console.ReadKey();
         }
+
+        private static double ReadBet()
+        {
+            Console.Write("Enter bet amount: ");
+            var betInput = Console.ReadLine();
+
+            double bet = 0;
+            while (!double.TryParse(betInput, out bet) || string.IsNullOrEmpty(betInput) || double.IsNegative(bet))
+            {
+                Console.Clear();
+                Console.WriteLine("Inappropriate bet. Please, enter another amount");
+                betInput = Console.ReadLine();
+                double.TryParse(betInput, out bet);
+            }
+
+            return bet;
+        }
+
+        private static string ReadHostMove()
+        {
+            Console.WriteLine($"Enter host's move");
+            Console.WriteLine("Suitable moves are: ");
+            Console.WriteLine(string.Join(", ", _userMoves));
+            var hostMove = Console.ReadLine();
+            
+            while (string.IsNullOrEmpty(hostMove))
+            {
+                Console.WriteLine("Host's move cannot be empty. Please try again.");
+                hostMove = Console.ReadLine();
+            }
+
+            while (!IsValidMove(hostMove))
+            {
+                Console.Clear();
+                Console.WriteLine("Invalid move. Please try again.");
+                Console.WriteLine("Suitable moves are: ");
+                Console.WriteLine(string.Join(", ", _userMoves));
+                hostMove = Console.ReadLine();
+            }
+            
+            return hostMove;
+        }
         
+        private static bool IsValidMove(string move) => _userMoves.Contains(move);
         private static async Task GetMatchesWithBet(GameService.GameServiceClient client)
         {
             try
