@@ -62,5 +62,14 @@ ALTER TABLE "MatchHistories" ADD "Winner" text;
 INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
 VALUES ('20250125153531_AddMatchStatus', '9.0.1');
 
+INSERT INTO "MatchHistories" ("Id", "HostId", "OpponentId", "Bet", "StartTime", "PlayerMoves", "Status", "Winner")
+VALUES
+  ('0194a90c-807a-75f0-abcf-6024cbcb79da', 'eaed04f7-e210-4064-8ed0-60c08b339e12', '0a05d6a1-6066-4e0e-a472-b839f5588719', 450, '2025-01-27 21:35:56.379 +0300', '{Н,К}', 0, '0a05d6a1-6066-4e0e-a472-b839f5588719');
+
+INSERT INTO "Users" ("Id", "Name", "Email", "Balance")
+VALUES
+  ('0a05d6a1-6066-4e0e-a472-b839f5588719', 'George1', 'capi@mail.ru', 900),
+  ('eaed04f7-e210-4064-8ed0-60c08b339e12', 'Michael2', 'lilcapy@mail.ru', 2100);
+
 COMMIT;
 
